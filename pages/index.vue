@@ -18,7 +18,13 @@
         class="text-sm font-mono absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] flex flex-col items-center gap-1"
       >
         <p class="font-bold">ASCIItron</p>
-        <p class="text-xs">[ascii webcam video renderer]</p>
+        <p class="text-xs">
+          {{
+            !isLoading
+              ? "[ascii webcam video renderer]"
+              : "[loading video data]"
+          }}
+        </p>
       </div>
     </div>
 
@@ -101,7 +107,7 @@
   <Transition>
     <div
       v-if="capturedImage"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-lg"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20 backdrop-blur-2xl"
     >
       <div class="bg-white flex flex-col items-start">
         <img
@@ -113,7 +119,7 @@
           <a
             :href="capturedImage"
             download="captured-image.png"
-            class="flex-1 bg-black px-4 py-2.5 text-sm group flex items-center justify-between relative overflow-hidden text-white hover:bg-black/90"
+            class="flex-1 bg-white px-4 py-2.5 text-sm group flex items-center justify-between relative overflow-hidden text-black hover:bg-black/5"
           >
             <p class="relative transition-colors">Download</p>
             <Download class="w-4 h-4 relative" />
@@ -146,6 +152,7 @@ import { ref, onUnmounted } from "vue";
 const canvasElement = ref<HTMLCanvasElement | null>(null);
 const stream = ref<MediaStream | null>(null);
 const isPlaying = ref(false);
+const isLoading = ref(false);
 const videoElement = ref<HTMLVideoElement | null>(null);
 const mode = ref("grayscale");
 const isAsciiEnabled = ref(true);
@@ -182,6 +189,8 @@ const grayscaleToThermalColor = (value: number): string => {
 };
 
 const startWebcam = async (): Promise<void> => {
+  if (isPlaying.value) return;
+  isLoading.value = true;
   try {
     stream.value = await navigator.mediaDevices.getUserMedia({ video: true });
     videoElement.value = document.createElement("video");
@@ -195,6 +204,7 @@ const startWebcam = async (): Promise<void> => {
         drawToCanvas();
       }
       isPlaying.value = true;
+      isLoading.value = false;
     };
   } catch (error) {
     console.error("Error accessing the webcam:", error);
